@@ -1,4 +1,3 @@
-# Project-Management-Tool
 
 # Advanced Project Management Tool
 
@@ -29,4 +28,4 @@ The **Advanced Project Management Tool** is a simple web application designed to
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/project-management-tool.git
+   git clone https://github.com/shaileshtripathi93/project-management-tool.git
