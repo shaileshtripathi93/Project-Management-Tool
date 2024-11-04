@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Project Management Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            text-align: center;
+        }
+        
+        .auth-container, .project-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .projects-list {
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #fafafa;
+            border-radius: 5px;
+        }
+        
+        .project-item {
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .project-item:last-child {
+            border-bottom: none;
+        }
+        
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            border-bottom: 1px solid #ccc;
+        }
+        
+        .task-item:last-child {
+            border-bottom: none;
+        }
+        
+        .task-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        
+        .alert {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Project Management Tool</h1>
+        <div class="auth-container">
+            <input type="text" id="username" placeholder="Username">
+            <button id="loginButton">Login</button>
+            <button id="logoutButton" style="display:none;">Logout</button>
+        </div>
+        <div class="project-container">
+            <input type="text" id="projectInput" placeholder="Add a new project">
+            <button id="addProjectButton">Add Project</button>
+        </div>
+        <input type="text" id="filterInput" placeholder="Filter tasks by name..." onkeyup="filterTasks()">
+        <div id="projectsList" class="projects-list"></div>
+    </div>
+    
+    <script>
+        const addProjectButton = document.getElementById('addProjectButton');
+        const projectInput = document.getElementById('projectInput');
+        const projectsList = document.getElementById('projectsList');
+        const loginButton = document.getElementById('loginButton');
+        const logoutButton = document.getElementById('logoutButton');
+        const usernameInput = document.getElementById('username');
+        const filterInput = document.getElementById('filterInput');
+        
+        // Load projects from local storage
+        let projects = JSON.parse(localStorage.getItem('projects')) || [];
+        let currentUser = localStorage.getItem('currentUser') || null;
+        
+        if (currentUser) {
+            usernameInput.value = currentUser;
+            loginUser(currentUser);
+        }
+        
+        loginButton.addEventListener('click', login);
+        logoutButton.addEventListener('click', logout);
+        addProjectButton.addEventListener('click', addProject);
+        
+        function login() {
+            const username = usernameInput.value.trim();
+            if (username) {
+                localStorage.setItem('currentUser', username);
+                loginUser(username);
+            } else {
+                alert('Please enter a username.');
+            }
+        }
+        
+        function loginUser(username) {
+            currentUser = username;
+            logoutButton.style.display = 'block';
+            renderProjects();
+        }
+        
+        function logout() {
+            localStorage.removeItem('currentUser');
+            currentUser = null;
+            logoutButton.style.display = 'none';
+            renderProjects();
+        }
+        
+        function addProject() {
+            const projectName = projectInput.value.trim();
+            if (projectName) {
+                const project = {
+                    name: projectName,
+                    tasks: []
+                };
+                projects.push(project);
+                localStorage.setItem('projects', JSON.stringify(projects));
+                renderProjects();
+                projectInput.value = ''; // Clear input after adding
+            } else {
+                alert('Please enter a project name.');
+            }
+        }
+        
+        function renderProjects() {
+            projectsList.innerHTML = '';
+            projects.forEach((project, index) => {
+                const projectItem = document.createElement('div');
+                projectItem.className = 'project-item';
+                
+                const projectText = document.createElement('span');
+                projectText.innerText = project.name;
+        
+                const deleteButton = document.createElement('button');
+                deleteButton.innerText = 'Delete';
+                deleteButton.onclick = () => deleteProject(index);
+        
+                const addTaskButton = document.createElement('button');
+                addTaskButton.innerText = 'Add Task';
+                addTaskButton.onclick = () => addTask(index);
+        
+                projectItem.appendChild(projectText);
+                projectItem.appendChild(addTaskButton);
+                projectItem.appendChild(deleteButton);
+                projectsList.appendChild(projectItem);
+        
+                const taskContainer = document.createElement('div');
+                taskContainer.className = 'task-container';
+                project.tasks.forEach((task, taskIndex) => {
+                    renderTask(taskContainer, task, taskIndex, index);
+                });
+                projectItem.appendChild(taskContainer);
+            });
+        }
+        
+        function deleteProject(index) {
+            projects.splice(index, 1);
+            localStorage.setItem('projects', JSON.stringify(projects));
+            renderProjects();
+        }
+        
+        function addTask(projectIndex) {
+            const taskName = prompt('Enter task name:');
+            const dueDate = prompt('Enter due date (YYYY-MM-DD):');
+            const priority = prompt('Enter priority (low, medium, high):');
+        
+            if (taskName) {
+                projects[projectIndex].tasks.push({ name: taskName, dueDate: dueDate, priority: priority, completed: false });
+                localStorage.setItem('projects', JSON.stringify(projects));
+                renderProjects();
+                checkDueDates();
+            }
+        }
+        
+        function renderTask(container, task, taskIndex, projectIndex) {
+            const taskItem = document.createElement('div');
+            taskItem.className = 'task-item';
+        
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = task.completed;
+            checkbox.onchange = () => {
+                task.completed = checkbox.checked;
+                localStorage.setItem('projects', JSON.stringify(projects));
+                renderProjects();
+            };
+        
+            const taskText = document.createElement('span');
+            taskText.innerText = `${task.name} (Due: ${task.dueDate}, Priority: ${task.priority})`;
+        
+            const deleteButton = document.createElement('button');
+            deleteButton.innerText = 'Delete';
+            deleteButton.onclick = () => {
+                projects[projectIndex].tasks.splice(taskIndex, 1);
+                localStorage.setItem('projects', JSON.stringify(projects));
+                renderProjects();
+            };
+        
+            taskItem.appendChild(checkbox);
+            taskItem.appendChild(taskText);
+            taskItem.appendChild(deleteButton);
+            container.appendChild(taskItem);
+        }
+        
+        // Function to check for due dates and alert user
+        function checkDueDates() {
+            const today = new Date().toISOString().split('T')[0];
+            projects.forEach(project => {
+                project.tasks.forEach(task => {
+                    if (task.dueDate === today && !task.completed) {
+                        alert(`Due date alert! Task "${task.name}" is due today!`);
+                    }
+                });
+            });
+        }
+        
+        // Filter tasks based on input
+        function filterTasks() {
+            const filterValue = filterInput.value.toLowerCase();
+            const taskItems = document.querySelectorAll('.task-item');
+            taskItems.forEach(item => {
+                const taskText = item.querySelector('span').innerText.toLowerCase();
+                item.style.display = taskText.includes(filterValue) ? 'flex' : 'none';
+            });
+        }
+        
+        // Initial rendering of projects
+        renderProjects();
+    </script>
+</body>
+</html>
