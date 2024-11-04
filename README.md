@@ -1,7 +1,7 @@
 
 # Advanced Project Management Tool
 
-![Project Management Tool](path_to_your_image.png)
+![Project Management Tool](https://github.com/shaileshtripathi93/Project-Management-Tool/blob/main/Screenshot%202024-11-04%20150053.png)
 
 ## Overview
 
